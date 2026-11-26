@@ -10,6 +10,13 @@ export async function readCalendar(bytes,expected){
  const matches=d.matches.map(m=>{if(!Number.isSafeInteger(m.id)||ids.has(m.id)||!Number.isFinite(Date.parse(m.kickoff))||Date.parse(m.kickoff)<=cutoff||typeof m.home!=='string'||typeof m.away!=='string'||!m.home.trim()||!m.away.trim()||m.home.length>200||m.away.length>200||Object.keys(m).sort().join(',')!=='away,home,id,kickoff')throw Error('Rencontre invalide');ids.add(m.id);return {id:m.id,kickoff:m.kickoff,home:m.home,away:m.away}});
  return {matches,captured_at:d.captured_at,hash};
 }
+export async function readBundle(bytes){
+ if(!(bytes instanceof Uint8Array)||!bytes.length||bytes.length>1500000)throw Error('Paquet invalide');
+ const b=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
+ if(b.schema!=='OPENLIGA_BUNDLE_V1'||Object.keys(b).sort().join(',')!=='calendar, schema, sha256'.replaceAll(' ','')||typeof b.calendar!=='string')throw Error('Paquet invalide');
+ const d=await readCalendar(new TextEncoder().encode(b.calendar),b.sha256);
+ return {...d,integrity:'SELF_CONTAINED_UNAUTHENTICATED'};
+}
 const fmt=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',dateStyle:'medium',timeStyle:'short'});
 const day=new Intl.DateTimeFormat('fr-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'});
 const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
@@ -22,10 +29,11 @@ if(typeof document!=='undefined'){
  const button=document.getElementById('ol-read'),out=document.getElementById('ol-output');let generation=0;
  button?.addEventListener('click',async()=>{const token=++generation;out.replaceChildren();try{
  const f=document.getElementById('ol-file').files[0],h=document.getElementById('ol-hash').value.trim();
- if(!f||f.size>1048576)throw Error('Choisir un fichier JSON valide');
- const d=await readCalendar(new Uint8Array(await f.arrayBuffer()),h);if(token!==generation)return;
+ if(!f||f.size>1500000)throw Error('Choisir un fichier JSON valide');
+ const bytes=new Uint8Array(await f.arrayBuffer()); const d=h?await readCalendar(bytes,h):await readBundle(bytes);if(token!==generation)return;
  const add=(tag,txt,parent=out)=>{const e=document.createElement(tag);e.textContent=txt;parent.append(e);return e};
  add('p',d.matches.length+' rencontres — capture '+fmt.format(new Date(d.captured_at))+' — quarantaine, aucune admission (heure de Paris)');
+ if(d.integrity)add('p','Empreinte interne vérifiée ; origine non authentifiée.');
  const q=add('input','');q.type='search';q.id='ol-query';q.placeholder='Rechercher une équipe';q.setAttribute('aria-label','Rechercher une équipe');
  const date=add('input','');date.type='date';date.id='ol-date';date.setAttribute('aria-label','Date de rencontre');
  const status=add('p','');status.id='ol-count';status.setAttribute('aria-live','polite');
