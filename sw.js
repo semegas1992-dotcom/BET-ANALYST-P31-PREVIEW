@@ -1,4 +1,4 @@
-const CACHE='bet-p31-preview-v3';
+const CACHE='bet-p31-preview-v4';
 const ASSETS=['./','./index.html','./viewer.js','./c4-reader.js','./reports.json'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));

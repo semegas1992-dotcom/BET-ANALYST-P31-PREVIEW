@@ -8,6 +8,7 @@ function validate(r){
  if(q.sporting_conclusion!=='NOT_ESTABLISHED'||q.decision!=='NOT_ESTABLISHED'||q.dominant_trajectory!==null||!Array.isArray(q.markets)||q.markets.length>5||q.markets.some(m=>!m||m.status!=='NOT_EVALUATED'||!Object.hasOwn(m,'contract')))throw Error('Conclusion non autorisée');
  return q;
 }
+const labels={detail:'Détail',status:'Statut',evidence:'Éléments de preuve',missing:'Données manquantes',identity:'Identité',context:'Contexte',matched_opposition:'Opposition comparable',interactions:'Interactions',observation_prompts:'Points à observer',opposition_context:'Contexte adverse',scenarios:'Scénarios',scoped_uncertainty:'Incertitudes',trajectories:'Trajectoires',descriptive_envelopes:'Plages descriptives',scoped_arguments:'Arguments contextualisés',sequences:'Séquences',availability_routing:'Disponibilité',event_contracts:'Contrats de marché',market_scopes:'Périmètres des marchés',data_quality:'Qualité des données',market_arguments:'Arguments de marché',sporting_reasoning:'Raisonnement sportif',NOT_ESTABLISHED:'Non établi',NOT_EVALUATED:'Non évalué',BLOCKED:'Bloqué', 'Event identity only matched to synthetic labels and kickoff':'Identité rapprochée uniquement des libellés et horaires synthétiques', 'Documentary records not authenticated or linked to individual observations':'Documents non authentifiés ou non reliés aux observations individuelles', 'No verified tactical or sequence projection':'Aucune projection tactique ou séquentielle vérifiée', 'No event market evaluation':'Aucune évaluation des marchés de la rencontre'};
 function render(r,el,doc){
  el.replaceChildren();const q=validate(r);
  function add(tag,value,parent=el){const n=doc.createElement(tag);n.textContent=value;parent.append(n);return n}
@@ -16,8 +17,8 @@ function render(r,el,doc){
  add('p','Trajectoire dominante : non déterminée');
  add('p','Décision opérationnelle : non établie');
  for(const m of q.markets)add('p','Marché non évalué : '+JSON.stringify(m.contract));
- add('p','Données manquantes : '+JSON.stringify(q.missing??null));
- add('p','Limites : '+JSON.stringify(q.limitations??null));
+ add('p','Données manquantes : '+(Array.isArray(q.missing)?q.missing.map(x=>labels[x]??x).join(', ')||'Aucune renseignée':'Non renseignées'));
+ add('h4','Limites documentaires');const ul=add('ul','');for(const x of q.limitations??[])add('li',labels[x]??x,ul);
  const envelopes=r.sections[4].descriptive_envelopes??{};
  if(Object.keys(envelopes).length){
    add('h4','Contrastes historiques — descriptifs uniquement');
@@ -28,7 +29,9 @@ function render(r,el,doc){
    add('p','Ces contrastes ne sont ni des prévisions ni des probabilités.');
  }
  const d=add('details','');add('summary','Analyse approfondie — données déclaratives',d);
- for(const s of r.sections){add('h4',String(s.title??s.number),d);add('pre',JSON.stringify(s,null,2),d)}
+ function readable(v,parent){if(v===null){add('span','Non renseigné',parent);return}if(typeof v!=='object'){add('span',typeof v==='boolean'?(v?'Oui':'Non'):String(labels[v]??v),parent);return}const entries=Object.entries(v);if(!entries.length){add('span','Aucun élément renseigné',parent);return}const list=add('dl','',parent);for(const [k,x] of entries){add('dt',Array.isArray(v)?'Élément '+(Number(k)+1):labels[k]??k,list);readable(x,add('dd','',list))}}
+ for(const s of r.sections){const panel=add('article','',d);add('h4',s.number+'. '+String(s.title??s.number),panel);for(const [k,v] of Object.entries(s)){if(k==='number'||k==='title')continue;add('h5',labels[k]??k,panel);readable(v,panel)}}
+ const raw=add('details','',el);add('summary','Données originales — JSON intégral',raw);add('pre',JSON.stringify(r,null,2),raw);
 }
 if(typeof module!=='undefined')module.exports={validate,render};
 root.P31Reader={validate,render};
