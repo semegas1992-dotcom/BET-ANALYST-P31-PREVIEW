@@ -22,6 +22,8 @@ jobs:
             cp "$f" /tmp/new/BET-ANALYST-P31-PREVIEW/
           done
           python -m http.server 8765 --directory /tmp/old &
+          export OLD_PID=$!
           python -m http.server 8766 --directory /tmp/new &
+          export NEW_PID=$!
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8765/ >/dev/null && curl -fsS http://127.0.0.1:8766/ >/dev/null && break; sleep 1; done
           node regression.cjs
