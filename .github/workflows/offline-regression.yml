@@ -1,0 +1,27 @@
+name: P31 offline regression
+on: [push, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  chromium:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --package-lock=false playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - run: |
+          mkdir -p /tmp/old/BET-ANALYST-P31-PREVIEW /tmp/new/BET-ANALYST-P31-PREVIEW
+          for f in index.html viewer.js c4-reader.js sw.js reports.json; do
+            git show c8adbf644a400c2f5a6d0fdccbfd311ea275a5ff:$f > /tmp/old/BET-ANALYST-P31-PREVIEW/$f
+            cp "$f" /tmp/new/BET-ANALYST-P31-PREVIEW/
+          done
+          python -m http.server 8765 --directory /tmp/old &
+          python -m http.server 8766 --directory /tmp/new &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8765/ >/dev/null && curl -fsS http://127.0.0.1:8766/ >/dev/null && break; sleep 1; done
+          node regression.cjs
