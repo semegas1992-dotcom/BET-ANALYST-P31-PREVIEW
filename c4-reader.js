@@ -12,11 +12,11 @@ const labels={detail:'Détail',status:'Statut',evidence:'Éléments de preuve',m
 function render(r,el,doc){
  el.replaceChildren();const q=validate(r);
  function add(tag,value,parent=el){const n=doc.createElement(tag);n.textContent=value;parent.append(n);return n}
- add('h3','Synthèse rapide — rapport synthétique non authentifié');
+ add('h3','Synthèse du rapport');add('p','Démonstration synthétique non authentifiée — aucune analyse réelle.');add('p','Contrôle de structure du rapport : validé');
  add('p','Conclusion sportive : non établie');
  add('p','Trajectoire dominante : non déterminée');
  add('p','Décision opérationnelle : non établie');
- for(const m of q.markets)add('p','Marché non évalué : '+JSON.stringify(m.contract));
+ if(!q.markets.length)add('p','Marchés : aucun marché évalué');for(const m of q.markets)add('p','Marché non évalué : '+JSON.stringify(m.contract));
  add('p','Données manquantes : '+(Array.isArray(q.missing)?q.missing.map(x=>labels[x]??x).join(', ')||'Aucune renseignée':'Non renseignées'));
  add('h4','Limites documentaires');const ul=add('ul','');for(const x of q.limitations??[])add('li',labels[x]??x,ul);
  const envelopes=r.sections[4].descriptive_envelopes??{};
