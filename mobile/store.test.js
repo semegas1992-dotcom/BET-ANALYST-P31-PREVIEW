@@ -1,0 +1,15 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {webcrypto} from 'node:crypto';
+import {readBundle,calendarPage} from './calendar.js';
+import {validateReports,mergeReports,parseBackup,makeBackup,readReports} from './store.js';
+const r={title:'TEST A – B',report:'Rapport fictif',at:'2026-11-26T20:00:00Z'};
+test('legacy reports retain exact text and timestamp',()=>{const x=validateReports([r])[0];assert.equal(x.report,r.report);assert.equal(x.at,r.at);assert.equal(x.sport,'Non renseigné')});
+test('round trip preserves full dossier and prompt',()=>{const x={...r,sport:'NBA',prompt:'Méthode intégrale',dossier:'Sources non contrôlées'};assert.deepEqual(parseBackup(makeBackup([x],null)).reports,validateReports([x]))});
+test('merge keeps existing reports and deduplicates repeated restore',()=>{const x={...r,title:'TEST C – D'};assert.equal(mergeReports([r],[r,x]).length,2)});
+test('reject malformed report without modifying original',()=>{const a=[r];assert.throws(()=>mergeReports(a,[{...r,report:null}]));assert.deepEqual(a,[r])});
+test('reject unsupported sport and invalid date',()=>{assert.throws(()=>validateReports([{...r,sport:'autre'}]));assert.throws(()=>validateReports([{...r,at:'inconnue'}]))});
+test('reject corrupt local history rather than replace with empty array',()=>{assert.throws(()=>readReports({getItem:()=>'{oops'}))});
+test('reject excessive payload and unsupported schema',()=>{assert.throws(()=>parseBackup(' '.repeat(4000001)));assert.throws(()=>parseBackup('{"schema":"other"}'))});
+test('calendar quarantine parser rejects forged permission',async()=>{globalThis.crypto ||= webcrypto;const cal={schema:'OPENLIGA_SELECTIVE_V1',source:'OpenLigaDB',license:'ODbL-1.0',original_retained:false,engine_access:true,publication:'BLOCKED',qualification:'BLOCKED',source_sha256:'a'.repeat(64),cutoff:'2026-11-26T19:00:00Z',captured_at:'2026-11-26T18:00:00Z',matches:[]};const raw=JSON.stringify(cal);const hash=Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw))).toString('hex');await assert.rejects(readBundle(new TextEncoder().encode(JSON.stringify({schema:'OPENLIGA_BUNDLE_V1',calendar:raw,sha256:hash}))))});
+test('search still handles accents and Paris date boundary',()=>{const rows=[{id:1,home:'Équipe A',away:'B',kickoff:'2026-11-26T23:30:00Z'}];assert.equal(calendarPage(rows,'equipe','2026-11-27').total,1);assert.equal(calendarPage(rows,'equipe','2026-11-26').total,0)});
