@@ -1,0 +1,23 @@
+name: Verify public P32 UTM deployment
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/p32-public-check.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          for i in $(seq 1 30); do
+            if curl -fsSL "https://semegas1992-dotcom.github.io/BET-ANALYST-P31-PREVIEW/p32b/sw.js?verify=$i" -o /tmp/public-sw.js && cmp p32b/sw.js /tmp/public-sw.js; then
+              curl -fsSL https://semegas1992-dotcom.github.io/BET-ANALYST-P31-PREVIEW/p32b/ -o /tmp/public-index.html
+              grep -q 'P3.2-B' /tmp/public-index.html
+              echo P32_PUBLIC_CORRECTED_SW_PASS
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1

@@ -1,1 +1,1 @@
-Validated artifact 15136025745; source 90fb50390ffcf74d4e66a50230378477d6c6d040; six browser passes. Imported unchanged via run 45855249685.
+Validated engine artifact 15136025745. UTM fix 48d0db1; targeted regression 45859477286 passed; stable regression 45859477189 12/12. Public byte comparison pending.
