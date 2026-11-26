@@ -1,7 +1,7 @@
 'use strict';
-const CACHE='bet-hybrid-mvp-v8';
+const CACHE='bet-hybrid-mvp-v9';
 const ASSETS=['./','./index.html','./c3-reader.js','./c4-reader.js','./openliga-reader.js','./manifest.webmanifest'];
-self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS))));
+self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{
   const names=await caches.keys();
   await Promise.all(names.filter(name=>name.startsWith('bet-hybrid-mvp-')&&name!==CACHE).map(name=>caches.delete(name)));
