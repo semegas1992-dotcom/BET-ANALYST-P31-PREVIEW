@@ -1,0 +1,30 @@
+name: Import validated P32 browser artifact
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/import-p32.yml']
+permissions:
+  contents: write
+  actions: read
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve exact validated archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/semegas1992-dotcom/BET-ANALYST-C3-TEST/actions/artifacts/15136025745/zip > /tmp/p32.zip
+          echo '16cbce900ef7b24d516067d020f555d24d2f6b277fc4b7610af82c7d96326858  /tmp/p32.zip' | sha256sum -c -
+          mkdir -p p32b
+          unzip -q /tmp/p32.zip -d p32b
+          test -f p32b/runtime/pyodide.asm.wasm
+          test -f p32b/engine.zip
+      - name: Commit isolated validated package
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git add p32b
+          git commit -m 'Import verified P32-B artifact 15136025745'
+          git push origin HEAD:main
