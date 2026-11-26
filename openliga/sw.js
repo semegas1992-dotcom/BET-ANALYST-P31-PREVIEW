@@ -1,5 +1,5 @@
 'use strict';
-const CACHE='bet-openliga-preview-v7';
+const CACHE='bet-openliga-preview-v8-mvp';
 const ASSETS=['./','./index.html','./c3-reader.js','./c4-reader.js','./openliga-reader.js','./manifest.webmanifest'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS))));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{
