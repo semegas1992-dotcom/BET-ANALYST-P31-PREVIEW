@@ -39,9 +39,9 @@ $('query').oninput=$('date').oninput=()=>{page=1;render()};$('prev').onclick=()=
 $('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('prompt').value);$('copy').textContent='Copié'}catch{$('prompt').focus();$('prompt').select();$('copy').textContent='Copier le texte sélectionné'}};
 // Free search uses the existing hybrid transfer, not an unverified calendar.
 const free=document.createElement('section');free.className='panel';
-const heading=node('h2','Recherche libre multisport',free);
-const sport=document.createElement('select');sport.setAttribute('aria-label','Sport');sport.style.cssText='width:100%;padding:12px;font:inherit';for(const s of ['Football','Tennis','NBA']){const o=node('option',s,sport);o.value=s}free.append(sport);
-const event=document.createElement('input');event.placeholder='Équipes ou joueurs';event.setAttribute('aria-label','Rencontre à rechercher');free.append(event);
+node('h2','Recherche libre multisport',free);
+const sport=document.createElement('select');sport.setAttribute('aria-label','Sport');sport.style.cssText='width:100%;padding:12px;font:inherit';for(const s of ['Football','Tennis','NBA']){const o=node('option',s,sport);o.value=s}free.append(sport);for(const b of $('sports').querySelectorAll('button')){b.disabled=false;b.onclick=()=>{sport.value=b.textContent.trim();for(const x of $('sports').querySelectorAll('button'))x.setAttribute('aria-selected',String(x===b));event.placeholder=sport.value==='Tennis'?'Joueurs ou tournoi':'Équipes ou compétition';free.scrollIntoView({block:'nearest'})}}
+const event=document.createElement('input');event.placeholder='Équipes ou joueurs';event.setAttribute('aria-label','Rencontre à rechercher');free.append(event);sport.onchange=()=>{for(const b of $('sports').querySelectorAll('button'))b.setAttribute('aria-selected',String(b.textContent.trim()===sport.value));event.placeholder=sport.value==='Tennis'?'Joueurs ou tournoi':'Équipes ou compétition'};
 const date=document.createElement('input');date.type='date';date.setAttribute('aria-label','Date facultative');free.append(date);
 const go=node('button','Rechercher et analyser',free);
 node('small','ChatGPT vérifie la rencontre et recherche les données. Aucun calendrier supplémentaire connecté.',free);
