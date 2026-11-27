@@ -1,5 +1,5 @@
-const CACHE='bet-mobile-hybrid-v2';
+const CACHE='bet-mobile-hybrid-v3';
 const ASSETS=['./','./index.html','./app.js','./mobile.css','./report-view.js','./calendar.js','./store.js','./manifest.webmanifest','./icon-192.png','./icon-512.png','./KRAFT_V3_REFERENCE.txt'];
-self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS.map(path=>new Request(path,{cache:'reload'})))).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil((async()=>{for(const k of await caches.keys())if(k.startsWith('bet-mobile-hybrid-')&&k!==CACHE)await caches.delete(k);await self.clients.claim()})()));
 self.addEventListener('fetch',e=>{const u=new URL(e.request.url),scope=new URL(self.registration.scope);if(e.request.method!=='GET'||u.origin!==scope.origin||!u.pathname.startsWith(scope.pathname))return;e.respondWith((async()=>{const c=await caches.open(CACHE);if(e.request.mode==='navigate'&&(u.pathname===scope.pathname||u.pathname===scope.pathname+'index.html'))return (await c.match(new URL('./index.html',scope).href))||fetch(e.request);return (await c.match(e.request))||fetch(e.request)})())});
