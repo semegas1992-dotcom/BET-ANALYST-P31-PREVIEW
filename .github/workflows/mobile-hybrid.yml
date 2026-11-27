@@ -1,7 +1,7 @@
 name: Mobile hybrid end-to-end
 on:
   push:
-    paths: ['mobile/**','mobile-regression.cjs','.github/workflows/mobile-hybrid.yml']
+    paths: ['mobile/**','mobile-regression.cjs','mobile-upgrade.cjs','.github/workflows/mobile-hybrid.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -22,6 +22,7 @@ jobs:
           python -m http.server 8769 --bind 127.0.0.1 > /tmp/mobile-http.log 2>&1 &
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8769/mobile/ >/dev/null && break; sleep 1; done
           node mobile-regression.cjs
+          node mobile-upgrade.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
